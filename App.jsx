@@ -30,14 +30,42 @@ const SERVICES = [
   { id: "kids", name: "תספורת ילדים", duration: 25, price: 45 },
 ];
 
-const TIME_SLOTS = [
-  "09:00","09:30","10:00","10:30","11:00","11:30",
-  "12:00","12:30","13:00","13:30","14:00","14:30",
-  "15:00","15:30","16:00","16:30","17:00","17:30","18:00"
-];
+function generateTimeSlots(date) {
+  if (!date) return [];
+  const d = new Date(date + "T12:00:00");
+  const day = d.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+
+  if (day === 6) return []; // שבת — סגור
+
+  const isFriday = day === 5;
+  const endHour = isFriday ? "13:30" : "19:00";
+  const slots = [];
+  let h = 8, m = 0;
+
+  while (true) {
+    const timeStr = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+    slots.push(timeStr);
+    if (timeStr === endHour) break;
+    m += 30;
+    if (m >= 60) { m = 0; h++; }
+  }
+  return slots;
+}
 
 function getTodayStr() {
   return new Date().toISOString().split("T")[0];
+}
+
+function getNowTime() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+}
+
+function isSlotInPast(date, time) {
+  const today = getTodayStr();
+  if (date < today) return true;
+  if (date === today && time <= getNowTime()) return true;
+  return false;
 }
 
 function formatDate(str) {
@@ -46,13 +74,26 @@ function formatDate(str) {
   return d.toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "long" });
 }
 
+function getMinDate() {
+  const today = getTodayStr();
+  // אם כל השעות של היום עברו — מינימום מחר
+  const todaySlots = generateTimeSlots(today);
+  const now = getNowTime();
+  const hasAvailable = todaySlots.some(t => t > now);
+  if (!hasAvailable) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split("T")[0];
+  }
+  return today;
+}
+
 export default function App() {
   const [view, setView] = useState("home");
   const [barbershop, setBarbershop] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Load barbershop (single shop for now)
   useEffect(() => {
     supabase("/barbershops?slug=eq.bendahair")
       .then(data => { if (data[0]) setBarbershop(data[0]); })
@@ -115,6 +156,12 @@ function Home({ setView, barbershop }) {
             </div>
           ))}
         </div>
+        <div style={styles.hoursBox}>
+          <h3 style={styles.hoursTitle}>שעות פעילות</h3>
+          <div style={styles.hoursRow}><span>ראשון–חמישי</span><span>08:00–19:00</span></div>
+          <div style={styles.hoursRow}><span>שישי</span><span>08:00–13:30</span></div>
+          <div style={{ ...styles.hoursRow, color: "#e05a5a" }}><span>שבת</span><span>סגור</span></div>
+        </div>
       </div>
     </div>
   );
@@ -125,13 +172,38 @@ function BookView({ setView, addAppointment, isSlotTaken, barbershop, appointmen
   const [form, setForm] = useState({ name: "", phone: "", service: "", date: "", time: "" });
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const today = getTodayStr();
+  const [errors, setErrors] = useState({});
+
+  const minDate = getMinDate();
 
   useEffect(() => { loadAppointments(); }, [barbershop]);
 
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k, v) => {
+    setForm(f => ({ ...f, [k]: v }));
+    setErrors(e => ({ ...e, [k]: "" }));
+  };
+
+  const validateStep1 = () => {
+    const errs = {};
+    if (!form.name.trim()) errs.name = "נא להכניס שם";
+    if (!form.phone.trim()) errs.phone = "נא להכניס טלפון";
+    else if (!/^[0-9\-+\s]{9,15}$/.test(form.phone.trim())) errs.phone = "מספר טלפון לא תקין";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const timeSlots = generateTimeSlots(form.date);
+  const isClosed = form.date && timeSlots.length === 0;
 
   const handleSubmit = async () => {
+    if (isSlotInPast(form.date, form.time)) {
+      setErrors({ time: "שעה זו כבר עברה" });
+      return;
+    }
+    if (isSlotTaken(form.date, form.time)) {
+      setErrors({ time: "שעה זו כבר תפוסה" });
+      return;
+    }
     setSubmitting(true);
     try {
       await addAppointment(form);
@@ -171,10 +243,17 @@ function BookView({ setView, addAppointment, isSlotTaken, barbershop, appointmen
         <div style={styles.card}>
           <h3 style={styles.cardTitle}>פרטים אישיים</h3>
           <label style={styles.label}>שם מלא</label>
-          <input style={styles.input} placeholder="ישראל ישראלי" value={form.name} onChange={e => set("name", e.target.value)} />
+          <input style={{ ...styles.input, borderColor: errors.name ? "#e05a5a" : "#2a2015" }}
+            placeholder="ישראל ישראלי" value={form.name} onChange={e => set("name", e.target.value)} />
+          {errors.name && <p style={styles.error}>{errors.name}</p>}
           <label style={styles.label}>טלפון</label>
-          <input style={styles.input} placeholder="050-0000000" value={form.phone} onChange={e => set("phone", e.target.value)} />
-          <button style={{ ...styles.btnPrimary, width: "100%", marginTop: 20 }} disabled={!form.name || !form.phone} onClick={() => setStep(2)}>המשך</button>
+          <input style={{ ...styles.input, borderColor: errors.phone ? "#e05a5a" : "#2a2015" }}
+            placeholder="050-0000000" value={form.phone} onChange={e => set("phone", e.target.value)} />
+          {errors.phone && <p style={styles.error}>{errors.phone}</p>}
+          <button style={{ ...styles.btnPrimary, width: "100%", marginTop: 20 }}
+            onClick={() => { if (validateStep1()) setStep(2); }}>
+            המשך
+          </button>
         </div>
       )}
 
@@ -194,7 +273,8 @@ function BookView({ setView, addAppointment, isSlotTaken, barbershop, appointmen
               </div>
             ))}
           </div>
-          <button style={{ ...styles.btnPrimary, width: "100%", marginTop: 20 }} disabled={!form.service} onClick={() => setStep(3)}>המשך</button>
+          <button style={{ ...styles.btnPrimary, width: "100%", marginTop: 20 }}
+            disabled={!form.service} onClick={() => setStep(3)}>המשך</button>
         </div>
       )}
 
@@ -202,32 +282,47 @@ function BookView({ setView, addAppointment, isSlotTaken, barbershop, appointmen
         <div style={styles.card}>
           <h3 style={styles.cardTitle}>תאריך ושעה</h3>
           <label style={styles.label}>תאריך</label>
-          <input style={styles.input} type="date" min={today} value={form.date} onChange={e => { set("date", e.target.value); set("time", ""); }} />
-          {form.date && (
+          <input style={styles.input} type="date" min={minDate} value={form.date}
+            onChange={e => { set("date", e.target.value); set("time", ""); }} />
+
+          {isClosed && (
+            <div style={styles.closedBox}>🚫 המספרה סגורה בשבת</div>
+          )}
+
+          {form.date && !isClosed && (
             <>
-              <label style={{ ...styles.label, marginTop: 16 }}>שעה פנויה</label>
+              <label style={{ ...styles.label, marginTop: 16 }}>
+                שעה פנויה
+                {new Date(form.date + "T12:00:00").getDay() === 5 && 
+                  <span style={{ color: "#c8a97e", marginRight: 8, fontSize: 12 }}>שישי — עד 13:30</span>}
+              </label>
               <div style={styles.timeGrid}>
-                {TIME_SLOTS.map(t => {
+                {timeSlots.map(t => {
                   const taken = isSlotTaken(form.date, t);
+                  const past = isSlotInPast(form.date, t);
+                  const unavailable = taken || past;
                   return (
                     <div key={t}
                       style={{
                         ...styles.timeSlot,
-                        background: taken ? "#1a1512" : form.time === t ? "#c8a97e" : "#2a2420",
-                        color: taken ? "#4a3f35" : form.time === t ? "#1a1512" : "#f0e8d8",
-                        cursor: taken ? "not-allowed" : "pointer",
-                        border: form.time === t ? "none" : "1px solid #3a3028"
+                        background: unavailable ? "#1a1512" : form.time === t ? "#c8a97e" : "#2a2420",
+                        color: unavailable ? "#4a3f35" : form.time === t ? "#1a1512" : "#f0e8d8",
+                        cursor: unavailable ? "not-allowed" : "pointer",
+                        border: form.time === t ? "none" : "1px solid #3a3028",
+                        textDecoration: past && !taken ? "line-through" : "none",
                       }}
-                      onClick={() => !taken && set("time", t)}>
+                      onClick={() => !unavailable && set("time", t)}>
                       {t}
                     </div>
                   );
                 })}
               </div>
+              {errors.time && <p style={styles.error}>{errors.time}</p>}
             </>
           )}
+
           <button style={{ ...styles.btnPrimary, width: "100%", marginTop: 20 }}
-            disabled={!form.date || !form.time || submitting}
+            disabled={!form.date || !form.time || submitting || isClosed}
             onClick={handleSubmit}>
             {submitting ? "שומר..." : "קבע תור ✓"}
           </button>
@@ -270,8 +365,8 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
   });
 
   const filtered = sorted.filter(a => {
-    if (filter === "upcoming") return a.date >= today;
-    if (filter === "past") return a.date < today;
+    if (filter === "upcoming") return a.date > today || (a.date === today && a.time > getNowTime());
+    if (filter === "past") return a.date < today || (a.date === today && a.time <= getNowTime());
     return true;
   });
 
@@ -313,8 +408,9 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
             <div style={styles.dateLabel}>{formatDate(date)}</div>
             {appts.map(a => {
               const svc = SERVICES.find(s => s.id === a.service);
+              const past = isSlotInPast(a.date, a.time);
               return (
-                <div key={a.id} style={styles.apptCard}>
+                <div key={a.id} style={{ ...styles.apptCard, opacity: past ? 0.5 : 1 }}>
                   <div style={{ flex: 1 }}>
                     <div style={styles.apptTime}>{a.time}</div>
                     <div style={styles.apptName}>{a.name}</div>
@@ -347,6 +443,9 @@ const styles = {
   serviceCardTitle: { fontWeight: 600, fontSize: 14, marginBottom: 8 },
   serviceCardMeta: { display: "flex", justifyContent: "space-between", color: "#8b7355", fontSize: 13 },
   price: { color: "#c8a97e", fontWeight: 700 },
+  hoursBox: { marginTop: 24, background: "#1a1512", border: "1px solid #2a2015", borderRadius: 10, padding: "16px" },
+  hoursTitle: { color: "#c8a97e", fontSize: 14, margin: "0 0 12px", letterSpacing: 1 },
+  hoursRow: { display: "flex", justifyContent: "space-between", color: "#8b7355", fontSize: 14, marginBottom: 6 },
   bookHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 20px 16px", borderBottom: "1px solid #2a2015" },
   bookTitle: { color: "#c8a97e", fontSize: 18, margin: 0 },
   back: { background: "none", border: "none", color: "#8b7355", cursor: "pointer", fontSize: 14, padding: 0 },
@@ -355,10 +454,12 @@ const styles = {
   card: { margin: "24px 20px 0", background: "#1a1512", border: "1px solid #2a2015", borderRadius: 14, padding: "24px 20px" },
   cardTitle: { color: "#c8a97e", fontSize: 17, fontWeight: 700, marginTop: 0, marginBottom: 20 },
   label: { display: "block", color: "#8b7355", fontSize: 13, marginBottom: 6 },
-  input: { width: "100%", background: "#0f0c0a", border: "1px solid #2a2015", borderRadius: 8, color: "#f0e8d8", padding: "11px 12px", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 14, direction: "rtl" },
+  input: { width: "100%", background: "#0f0c0a", border: "1px solid", borderRadius: 8, color: "#f0e8d8", padding: "11px 12px", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 4, direction: "rtl" },
+  error: { color: "#e05a5a", fontSize: 12, margin: "0 0 10px" },
   optionRow: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0f0c0a", border: "1.5px solid", borderRadius: 10, padding: "12px 14px", cursor: "pointer" },
   timeGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 8 },
   timeSlot: { borderRadius: 7, padding: "9px 4px", textAlign: "center", fontSize: 13, fontWeight: 600 },
+  closedBox: { background: "#2a1515", border: "1px solid #5a2020", borderRadius: 8, padding: "12px 16px", color: "#e05a5a", textAlign: "center", marginTop: 12 },
   successBox: { margin: "60px 24px 0", background: "#1a1512", border: "1px solid #c8a97e44", borderRadius: 16, padding: "40px 24px", textAlign: "center" },
   successIcon: { width: 56, height: 56, background: "#c8a97e", color: "#1a1512", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, fontWeight: 700, margin: "0 auto 20px" },
   successTitle: { color: "#c8a97e", fontSize: 22, margin: "0 0 12px" },
