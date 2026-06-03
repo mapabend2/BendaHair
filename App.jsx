@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 const SUPABASE_URL = "https://oiusfwcdqyyfxzpdoqkm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_WpwBaxSGrPOa8dXDab5Vug_vfZpDQNR";
 
-// ─── Supabase helpers ───────────────────────────────────────────
 async function sbFetch(path, options = {}) {
   const session = getSession();
   const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
@@ -38,7 +37,6 @@ function getSession() {
 function saveSession(s) { localStorage.setItem("sb_session", JSON.stringify(s)); }
 function clearSession() { localStorage.removeItem("sb_session"); }
 
-// ─── Constants ──────────────────────────────────────────────────
 const SERVICES = [
   { id: "haircut", name: "תספורת רגילה", duration: 30, price: 60 },
   { id: "beard", name: "עיצוב זקן", duration: 20, price: 40 },
@@ -92,7 +90,6 @@ function getMinDate() {
   return today;
 }
 
-// ─── App ────────────────────────────────────────────────────────
 export default function App() {
   const [view, setView] = useState("home");
   const [user, setUser] = useState(null);
@@ -100,6 +97,7 @@ export default function App() {
   const [barbershop, setBarbershop] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [blockedDates, setBlockedDates] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -141,15 +139,22 @@ export default function App() {
     } catch(e) { console.error(e); }
   };
 
-  const signUp = async ({ firstName, lastName, email, phone, password, role }) => {
+  const loadCustomers = async () => {
+    try {
+      const data = await sbFetch(`/profiles?role=eq.customer&order=created_at.desc`);
+      setCustomers(data);
+    } catch(e) { console.error(e); }
+  };
+
+  const signUp = async ({ firstName, lastName, email, phone, password }) => {
     const data = await authFetch("/signup", { email, password });
     saveSession(data);
     setUser(data.user);
     await sbFetch("/profiles", {
       method: "POST",
-      body: JSON.stringify({ id: data.user.id, first_name: firstName, last_name: lastName, phone, role, barbershop_id: role === "owner" ? barbershop?.id : null }),
+      body: JSON.stringify({ id: data.user.id, first_name: firstName, last_name: lastName, phone, role: "customer" }),
     });
-    const p = { id: data.user.id, first_name: firstName, last_name: lastName, phone, role };
+    const p = { id: data.user.id, first_name: firstName, last_name: lastName, phone, role: "customer" };
     setProfile(p);
     return p;
   };
@@ -189,17 +194,15 @@ export default function App() {
 
   const isSlotTaken = (date, time) => appointments.some(a => a.date === date && a.time === time);
   const isDateBlocked = (date) => blockedDates.includes(date);
-
   const isOwner = profile?.role === "owner";
 
   if (view === "home") return <Home setView={setView} barbershop={barbershop} user={user} profile={profile} signOut={signOut} isOwner={isOwner} />;
   if (view === "signup") return <SignUp setView={setView} signUp={signUp} />;
   if (view === "signin") return <SignIn setView={setView} signIn={signIn} />;
   if (view === "book") return <BookView setView={setView} addAppointment={addAppointment} isSlotTaken={isSlotTaken} isDateBlocked={isDateBlocked} barbershop={barbershop} loadAppointments={loadAppointments} user={user} profile={profile} />;
-  if (view === "admin") return <AdminView appointments={appointments} cancelAppointment={cancelAppointment} setView={setView} barbershop={barbershop} loadAppointments={loadAppointments} loading={loading} blockedDates={blockedDates} toggleBlockedDate={toggleBlockedDate} isOwner={isOwner} />;
+  if (view === "admin") return <AdminView appointments={appointments} cancelAppointment={cancelAppointment} setView={setView} barbershop={barbershop} loadAppointments={loadAppointments} loading={loading} blockedDates={blockedDates} toggleBlockedDate={toggleBlockedDate} isOwner={isOwner} customers={customers} loadCustomers={loadCustomers} />;
 }
 
-// ─── Home ────────────────────────────────────────────────────────
 function Home({ setView, barbershop, user, profile, signOut, isOwner }) {
   return (
     <div style={s.page}>
@@ -249,9 +252,8 @@ function Home({ setView, barbershop, user, profile, signOut, isOwner }) {
   );
 }
 
-// ─── SignUp ──────────────────────────────────────────────────────
 function SignUp({ setView, signUp }) {
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", role: "customer" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -272,9 +274,8 @@ function SignUp({ setView, signUp }) {
     if (!validate()) return;
     setLoading(true);
     try {
-      const p = await signUp(form);
-      if (p.role === "owner") setView("admin");
-      else setView("home");
+      await signUp(form);
+      setView("home");
     } catch(e) { setErrors({ general: e.message }); }
     setLoading(false);
   };
@@ -313,16 +314,6 @@ function SignUp({ setView, signUp }) {
         <input style={{ ...s.input, borderColor: errors.password ? "#e05a5a" : "#2a2015" }}
           type="password" placeholder="לפחות 6 תווים" value={form.password} onChange={e => set("password", e.target.value)} />
         {errors.password && <p style={s.error}>{errors.password}</p>}
-        <label style={s.label}>סוג משתמש</label>
-        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-          {[["customer","לקוח"],["owner","בעל מספרה"]].map(([val, label]) => (
-            <div key={val} style={{ ...s.optionRow, flex: 1, borderColor: form.role === val ? "#c8a97e" : "#3a3028" }}
-              onClick={() => set("role", val)}>
-              <span style={{ color: "#f0e8d8", fontSize: 14 }}>{label}</span>
-              {form.role === val && <span style={{ color: "#c8a97e" }}>✓</span>}
-            </div>
-          ))}
-        </div>
         {errors.general && <p style={{ ...s.error, marginBottom: 10 }}>{errors.general}</p>}
         <button style={{ ...s.btnPrimary, width: "100%" }} disabled={loading} onClick={handleSubmit}>
           {loading ? "נרשם..." : "הרשמה"}
@@ -336,7 +327,6 @@ function SignUp({ setView, signUp }) {
   );
 }
 
-// ─── SignIn ──────────────────────────────────────────────────────
 function SignIn({ setView, signIn }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -380,7 +370,6 @@ function SignIn({ setView, signIn }) {
   );
 }
 
-// ─── BookView ────────────────────────────────────────────────────
 function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbershop, loadAppointments, user, profile }) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
@@ -396,7 +385,6 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
   useEffect(() => { loadAppointments(); }, [barbershop]);
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: "" })); };
-
   const timeSlots = generateTimeSlots(form.date);
   const isClosed = form.date && timeSlots.length === 0;
   const isBlocked = form.date && isDateBlocked(form.date);
@@ -437,7 +425,7 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
       <div style={s.bookHeader}>
         <button style={s.back} onClick={() => step > 1 ? setStep(st => st - 1) : setView("home")}>← חזור</button>
         <h2 style={s.bookTitle}>קביעת תור</h2>
-        <div style={s.steps}>{[1,2,3].map(n => <div key={n} style={{ ...s.stepDot, background: step >= n ? "#c8a97e" : "#2a2420" }} />)}</div>
+        <div style={s.steps}>{[1,2].map(n => <div key={n} style={{ ...s.stepDot, background: step >= n ? "#c8a97e" : "#2a2420" }} />)}</div>
       </div>
 
       {step === 1 && (
@@ -501,8 +489,7 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
   );
 }
 
-// ─── AdminView ───────────────────────────────────────────────────
-function AdminView({ appointments, cancelAppointment, setView, barbershop, loadAppointments, loading, blockedDates, toggleBlockedDate, isOwner }) {
+function AdminView({ appointments, cancelAppointment, setView, barbershop, loadAppointments, loading, blockedDates, toggleBlockedDate, isOwner, customers, loadCustomers }) {
   const [tab, setTab] = useState("appointments");
   const [filter, setFilter] = useState("upcoming");
   const [blockDate, setBlockDate] = useState("");
@@ -536,11 +523,13 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
       </div>
 
       <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #2a2015", margin: "0 20px" }}>
-        {[["appointments","תורים"],["ooo","חופשות"]].map(([k,l]) => (
-          <button key={k} style={{
-            flex: 1, background: "none", border: "none", borderBottom: tab === k ? "2px solid #c8a97e" : "2px solid transparent",
-            color: tab === k ? "#c8a97e" : "#8b7355", padding: "12px 0", fontSize: 14, fontWeight: 600, cursor: "pointer"
-          }} onClick={() => setTab(k)}>{l}</button>
+        {[["appointments","📅 תורים"],["customers","👥 לקוחות"],["ooo","🏖️ חופשות"]].map(([k,l]) => (
+          <button key={k} onClick={() => { setTab(k); if (k === "customers") loadCustomers(); }} style={{
+            flex: 1, background: "none", border: "none",
+            borderBottom: tab === k ? "2px solid #c8a97e" : "2px solid transparent",
+            color: tab === k ? "#c8a97e" : "#8b7355",
+            padding: "12px 4px", fontSize: 13, fontWeight: 600, cursor: "pointer"
+          }}>{l}</button>
         ))}
       </div>
 
@@ -583,6 +572,34 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
         </>
       )}
 
+      {tab === "customers" && (
+        <div style={{ padding: "16px 20px 0" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={s.dateLabel}>{customers.length} לקוחות רשומים</div>
+            <button style={{ ...s.filterBtn, background: "#2a2420", color: "#8b7355", padding: "8px 14px" }} onClick={loadCustomers}>🔄</button>
+          </div>
+          {customers.length === 0 && (
+            <div style={{ textAlign: "center", color: "#6b5a4a", marginTop: 60 }}>
+              <div style={{ fontSize: 40 }}>👥</div><p>אין לקוחות רשומים עדיין</p>
+            </div>
+          )}
+          {customers.map(c => (
+            <div key={c.id} style={s.apptCard}>
+              <div style={{ flex: 1 }}>
+                <div style={s.apptName}>{c.first_name} {c.last_name}</div>
+                <div style={s.apptMeta}>📞 {c.phone}</div>
+                <div style={{ ...s.apptMeta, marginTop: 2 }}>
+                  נרשם: {new Date(c.created_at).toLocaleDateString("he-IL")}
+                </div>
+              </div>
+              <div style={{ background: "#1e2a1e", border: "1px solid #2a4a2a", borderRadius: 6, padding: "4px 10px", color: "#6abf6a", fontSize: 12 }}>
+                לקוח
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {tab === "ooo" && (
         <div style={{ padding: "20px" }}>
           <div style={s.card}>
@@ -599,7 +616,7 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
               </button>
             </div>
           </div>
-          {blockedDates.length > 0 && (
+          {blockedDates.length > 0 ? (
             <div style={{ marginTop: 20 }}>
               <div style={s.dateLabel}>ימים חסומים</div>
               {[...blockedDates].sort().map(d => (
@@ -611,11 +628,9 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
                 </div>
               ))}
             </div>
-          )}
-          {blockedDates.length === 0 && (
+          ) : (
             <div style={{ textAlign: "center", color: "#6b5a4a", marginTop: 40 }}>
-              <div style={{ fontSize: 40 }}>✅</div>
-              <p>אין ימים חסומים</p>
+              <div style={{ fontSize: 40 }}>✅</div><p>אין ימים חסומים</p>
             </div>
           )}
         </div>
@@ -624,7 +639,6 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────
 const s = {
   page: { minHeight: "100vh", background: "#0f0c0a", color: "#f0e8d8", fontFamily: "'Segoe UI', Tahoma, sans-serif", direction: "rtl", padding: "0 0 40px" },
   hero: { textAlign: "center", padding: "60px 24px 48px", background: "linear-gradient(180deg, #1a1208 0%, #0f0c0a 100%)", borderBottom: "1px solid #2a2015" },
