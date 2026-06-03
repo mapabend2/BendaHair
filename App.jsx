@@ -293,12 +293,12 @@ function Home({ setView, barbershop, user, profile, signOut, isOwner, myAppointm
         <div style={s.serviceGrid}>
           {SERVICES.map(sv => (
             <div key={sv.id} style={s.serviceCard}>
-              <div style={s.serviceCardEmoji}>{sv.emoji}</div>
-              <div style={s.serviceCardTitle}>{sv.name}</div>
-              <div style={{ color: "#9ca3af", fontSize: 11, marginBottom: 8 }}>{sv.desc}</div>
-              <div style={s.serviceCardMeta}>
-                <span>⏱ {sv.duration} דק׳</span>
-                <span style={s.price}>₪{sv.price}</span>
+              <div style={{ fontSize: 40, marginBottom: 10 }}>{sv.emoji}</div>
+              <div style={{ fontWeight: 800, fontSize: 16, color: "#111827", marginBottom: 4 }}>{sv.name}</div>
+              <div style={{ color: "#9ca3af", fontSize: 12, marginBottom: 12 }}>{sv.desc}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ color: "#6b7280", fontSize: 13 }}>⏱ {sv.duration} דק׳</span>
+                <span style={{ color: "#4f46e5", fontWeight: 900, fontSize: 20 }}>₪{sv.price}</span>
               </div>
             </div>
           ))}
@@ -532,19 +532,39 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
       {step === 1 && (
         <div style={s.card}>
           <h3 style={s.cardTitle}>בחר שירות</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
             {SERVICES.map(sv => (
-              <div key={sv.id} style={{ ...s.optionRow, borderColor: form.service === sv.id ? "#4f46e5" : "#e5e7eb", background: form.service === sv.id ? "#eef2ff" : "#fff" }}
-                onClick={() => set("service", sv.id)}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ fontSize: 32, lineHeight: 1 }}>{sv.emoji}</div>
-                  <div>
-                    <div style={{ color: "#111827", fontWeight: 600 }}>{sv.name}</div>
-                    <div style={{ color: "#9ca3af", fontSize: 12 }}>{sv.desc}</div>
-                    <div style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>⏱ {sv.duration} דקות</div>
+              <div key={sv.id}
+                onClick={() => set("service", sv.id)}
+                style={{
+                  background: form.service === sv.id ? "#eef2ff" : "#fff",
+                  border: `2px solid ${form.service === sv.id ? "#4f46e5" : "#f0f0f0"}`,
+                  borderRadius: 16,
+                  padding: "18px 20px",
+                  marginBottom: 12,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  boxShadow: form.service === sv.id ? "0 4px 16px rgba(79,70,229,0.15)" : "0 2px 8px rgba(0,0,0,0.06)",
+                  transition: "all .2s",
+                }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+                  <div style={{ fontSize: 28, marginBottom: 6 }}>{sv.emoji}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "#111827" }}>{sv.name}</div>
+                  <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>{sv.desc}</div>
+                  <div style={{ fontSize: 13, color: "#6b7280", marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
+                    <span>⏱</span> <span>{sv.duration} דקות</span>
                   </div>
                 </div>
-                <div style={{ color: "#4f46e5", fontWeight: 700, fontSize: 16 }}>₪{sv.price}</div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: form.service === sv.id ? "#4f46e5" : "#111827" }}>
+                    ₪{sv.price}
+                  </div>
+                  {form.service === sv.id && (
+                    <div style={{ width: 28, height: 28, background: "#4f46e5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15, fontWeight: 800 }}>✓</div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -748,55 +768,55 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
 
 // ─── Styles ──────────────────────────────────────────────────────
 const s = {
-  page: { minHeight: "100vh", background: "#f9fafb", color: "#111827", fontFamily: "'Segoe UI', Tahoma, sans-serif", direction: "rtl", padding: "0 0 40px" },
-  hero: { textAlign: "center", padding: "48px 24px 40px", background: "#fff", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" },
-  scissors: { fontSize: 44, display: "block", marginBottom: 10 },
-  heroTitle: { fontSize: 36, fontWeight: 800, color: "#111827", margin: "0 0 6px", letterSpacing: 1 },
-  heroSub: { color: "#6b7280", fontSize: 15, margin: "0 0 28px" },
-  heroButtons: { display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" },
-  btnPrimary: { background: "#4f46e5", color: "#fff", border: "none", borderRadius: 8, padding: "12px 24px", fontSize: 15, fontWeight: 700, cursor: "pointer" },
-  btnOutline: { background: "#fff", color: "#4f46e5", border: "2px solid #4f46e5", borderRadius: 8, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer" },
-  btnGhost: { background: "transparent", color: "#9ca3af", border: "1px solid #e5e7eb", borderRadius: 8, padding: "10px 18px", fontSize: 14, cursor: "pointer" },
-  section: { padding: "24px 20px 0" },
-  sectionTitle: { color: "#111827", fontSize: 16, fontWeight: 700, marginBottom: 14, margin: "0 0 14px" },
-  serviceGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
-  serviceCard: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "14px 16px", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" },
-  serviceCardTitle: { fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#111827" },
-  serviceCardMeta: { display: "flex", justifyContent: "space-between", color: "#9ca3af", fontSize: 13 },
-  price: { color: "#4f46e5", fontWeight: 700 },
-  hoursBox: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: 16, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" },
-  hoursTitle: { color: "#111827", fontSize: 14, margin: "0 0 12px", fontWeight: 700 },
-  hoursRow: { display: "flex", justifyContent: "space-between", color: "#6b7280", fontSize: 14, marginBottom: 6 },
-  myApptCard: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "14px 16px", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" },
-  myApptDate: { color: "#6b7280", fontSize: 12, marginBottom: 8, fontWeight: 500 },
+  page: { minHeight: "100vh", background: "#f3f4f6", color: "#111827", fontFamily: "'Segoe UI', Tahoma, sans-serif", direction: "rtl", padding: "0 0 48px" },
+  hero: { textAlign: "center", padding: "52px 24px 44px", background: "#fff", borderBottom: "2px solid #e5e7eb", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" },
+  scissors: { fontSize: 56, display: "block", marginBottom: 12 },
+  heroTitle: { fontSize: 44, fontWeight: 900, color: "#111827", margin: "0 0 8px", letterSpacing: 1 },
+  heroSub: { color: "#6b7280", fontSize: 18, margin: "0 0 32px" },
+  heroButtons: { display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" },
+  btnPrimary: { background: "#4f46e5", color: "#fff", border: "none", borderRadius: 10, padding: "16px 32px", fontSize: 17, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 12px rgba(79,70,229,0.35)" },
+  btnOutline: { background: "#fff", color: "#4f46e5", border: "2.5px solid #4f46e5", borderRadius: 10, padding: "14px 26px", fontSize: 16, fontWeight: 700, cursor: "pointer" },
+  btnGhost: { background: "transparent", color: "#9ca3af", border: "1.5px solid #e5e7eb", borderRadius: 10, padding: "14px 20px", fontSize: 15, cursor: "pointer" },
+  section: { padding: "28px 16px 0" },
+  sectionTitle: { color: "#111827", fontSize: 20, fontWeight: 800, marginBottom: 16, margin: "0 0 16px" },
+  serviceGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
+  serviceCard: { background: "#fff", border: "2px solid #e5e7eb", borderRadius: 14, padding: "18px 16px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
+  serviceCardTitle: { fontWeight: 700, fontSize: 15, marginBottom: 6, color: "#111827" },
+  serviceCardMeta: { display: "flex", justifyContent: "space-between", color: "#9ca3af", fontSize: 13, marginTop: 8 },
+  price: { color: "#4f46e5", fontWeight: 800, fontSize: 16 },
+  hoursBox: { background: "#fff", border: "2px solid #e5e7eb", borderRadius: 14, padding: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
+  hoursTitle: { color: "#111827", fontSize: 16, margin: "0 0 14px", fontWeight: 800 },
+  hoursRow: { display: "flex", justifyContent: "space-between", color: "#374151", fontSize: 16, fontWeight: 500, marginBottom: 10 },
+  myApptCard: { background: "#fff", border: "2px solid #e5e7eb", borderRadius: 14, padding: "18px 16px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
+  myApptDate: { color: "#6b7280", fontSize: 13, marginBottom: 10, fontWeight: 600 },
   myApptRow: { display: "flex", justifyContent: "space-between", alignItems: "center" },
-  myApptTime: { color: "#4f46e5", fontWeight: 700, fontSize: 18 },
-  myApptService: { color: "#374151", fontSize: 13, marginTop: 2 },
-  myApptPrice: { color: "#111827", fontWeight: 700, fontSize: 15, textAlign: "left" },
-  cancelSmallBtn: { background: "none", border: "none", color: "#ef4444", fontSize: 12, cursor: "pointer", padding: "4px 0", textAlign: "left" },
-  emptyBox: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "24px 16px", textAlign: "center" },
-  topBar: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", background: "#fff", borderBottom: "1px solid #e5e7eb" },
-  topBarTitle: { color: "#111827", fontSize: 17, margin: 0, fontWeight: 700 },
-  back: { background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: 14, padding: 0 },
-  steps: { display: "flex", gap: 6 },
-  stepDot: { width: 8, height: 8, borderRadius: "50%", transition: "background .3s" },
-  card: { margin: "20px 20px 0", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "24px 20px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" },
-  cardTitle: { color: "#111827", fontSize: 16, fontWeight: 700, marginTop: 0, marginBottom: 18 },
-  label: { display: "block", color: "#374151", fontSize: 13, fontWeight: 500, marginBottom: 6 },
-  input: { width: "100%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, color: "#111827", padding: "11px 12px", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 14, direction: "rtl" },
-  error: { color: "#ef4444", fontSize: 12, margin: "0 0 10px" },
-  optionRow: { display: "flex", justifyContent: "space-between", alignItems: "center", border: "1.5px solid", borderRadius: 10, padding: "12px 14px", cursor: "pointer", transition: "all .15s" },
-  timeGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 8 },
-  timeSlot: { borderRadius: 7, padding: "9px 4px", textAlign: "center", fontSize: 13, fontWeight: 600, transition: "all .15s" },
-  closedBox: { background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "12px 16px", color: "#ef4444", textAlign: "center", marginTop: 12 },
-  successIcon: { width: 56, height: 56, background: "#4f46e5", color: "#fff", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, fontWeight: 700, margin: "0 auto 20px" },
-  filterRow: { display: "flex", gap: 8, padding: "16px 20px 0" },
-  filterBtn: { flex: 1, border: "none", borderRadius: 7, padding: "9px 0", fontSize: 13, fontWeight: 600, cursor: "pointer" },
-  dateLabel: { color: "#6b7280", fontSize: 12, fontWeight: 600, letterSpacing: 0.5, marginBottom: 8, textTransform: "uppercase" },
-  apptCard: { display: "flex", alignItems: "center", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "14px 16px", marginBottom: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" },
-  apptTime: { color: "#4f46e5", fontWeight: 700, fontSize: 16 },
-  apptName: { color: "#111827", fontWeight: 600, fontSize: 14, marginTop: 2 },
-  apptMeta: { color: "#9ca3af", fontSize: 12, marginTop: 3 },
-  cancelBtn: { background: "transparent", border: "1px solid #fecaca", color: "#ef4444", borderRadius: 7, padding: "7px 14px", fontSize: 12, cursor: "pointer" },
-  serviceCardEmoji: { fontSize: 28, marginBottom: 8, display: "block" },
+  myApptTime: { color: "#4f46e5", fontWeight: 800, fontSize: 22 },
+  myApptService: { color: "#374151", fontSize: 15, marginTop: 4 },
+  myApptPrice: { color: "#111827", fontWeight: 800, fontSize: 20, textAlign: "left" },
+  cancelSmallBtn: { background: "none", border: "none", color: "#ef4444", fontSize: 13, cursor: "pointer", padding: "4px 0", textAlign: "left", fontWeight: 600 },
+  emptyBox: { background: "#fff", border: "2px solid #e5e7eb", borderRadius: 14, padding: "32px 16px", textAlign: "center" },
+  topBar: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px", background: "#fff", borderBottom: "2px solid #e5e7eb" },
+  topBarTitle: { color: "#111827", fontSize: 20, margin: 0, fontWeight: 800 },
+  back: { background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: 16, padding: 0, fontWeight: 600 },
+  steps: { display: "flex", gap: 8 },
+  stepDot: { width: 10, height: 10, borderRadius: "50%", transition: "background .3s" },
+  card: { margin: "20px 16px 0", background: "#fff", border: "2px solid #e5e7eb", borderRadius: 16, padding: "28px 20px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
+  cardTitle: { color: "#111827", fontSize: 19, fontWeight: 800, marginTop: 0, marginBottom: 20 },
+  label: { display: "block", color: "#374151", fontSize: 15, fontWeight: 600, marginBottom: 8 },
+  input: { width: "100%", background: "#f9fafb", border: "2px solid #e5e7eb", borderRadius: 10, color: "#111827", padding: "14px 14px", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 16, direction: "rtl" },
+  error: { color: "#ef4444", fontSize: 13, margin: "0 0 12px", fontWeight: 600 },
+  optionRow: { display: "flex", justifyContent: "space-between", alignItems: "center", border: "2px solid", borderRadius: 14, padding: "16px 16px", cursor: "pointer", transition: "all .15s", marginBottom: 2 },
+  timeGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 },
+  timeSlot: { borderRadius: 10, padding: "13px 4px", textAlign: "center", fontSize: 15, fontWeight: 700, transition: "all .15s", border: "2px solid" },
+  closedBox: { background: "#fef2f2", border: "2px solid #fecaca", borderRadius: 10, padding: "16px", color: "#ef4444", textAlign: "center", marginTop: 14, fontSize: 15, fontWeight: 600 },
+  successIcon: { width: 68, height: 68, background: "#4f46e5", color: "#fff", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 800, margin: "0 auto 24px" },
+  filterRow: { display: "flex", gap: 8, padding: "16px 16px 0" },
+  filterBtn: { flex: 1, border: "none", borderRadius: 10, padding: "12px 0", fontSize: 14, fontWeight: 700, cursor: "pointer" },
+  dateLabel: { color: "#6b7280", fontSize: 13, fontWeight: 700, letterSpacing: 0.5, marginBottom: 10, textTransform: "uppercase" },
+  apptCard: { display: "flex", alignItems: "center", background: "#fff", border: "2px solid #e5e7eb", borderRadius: 14, padding: "16px 16px", marginBottom: 10, boxShadow: "0 2px 6px rgba(0,0,0,0.05)" },
+  apptTime: { color: "#4f46e5", fontWeight: 800, fontSize: 20 },
+  apptName: { color: "#111827", fontWeight: 700, fontSize: 16, marginTop: 3 },
+  apptMeta: { color: "#9ca3af", fontSize: 13, marginTop: 4 },
+  cancelBtn: { background: "transparent", border: "2px solid #fecaca", color: "#ef4444", borderRadius: 8, padding: "9px 16px", fontSize: 13, cursor: "pointer", fontWeight: 700 },
+  serviceCardEmoji: { fontSize: 36, marginBottom: 10, display: "block" },
 };
