@@ -152,9 +152,9 @@ export default function App() {
     setUser(data.user);
     await sbFetch("/profiles", {
       method: "POST",
-      body: JSON.stringify({ id: data.user.id, first_name: firstName, last_name: lastName, phone, role: "customer" }),
+      body: JSON.stringify({ id: data.user.id, first_name: firstName, last_name: lastName, phone, email, role: "customer" }),
     });
-    const p = { id: data.user.id, first_name: firstName, last_name: lastName, phone, role: "customer" };
+    const p = { id: data.user.id, first_name: firstName, last_name: lastName, phone, email, role: "customer" };
     setProfile(p);
     return p;
   };
@@ -588,6 +588,7 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
               <div style={{ flex: 1 }}>
                 <div style={s.apptName}>{c.first_name} {c.last_name}</div>
                 <div style={s.apptMeta}>📞 {c.phone}</div>
+                <div style={s.apptMeta}>{c.email && `✉️ ${c.email}`}</div>
                 <div style={{ ...s.apptMeta, marginTop: 2 }}>
                   נרשם: {new Date(c.created_at).toLocaleDateString("he-IL")}
                 </div>
