@@ -38,11 +38,11 @@ function saveSession(s) { localStorage.setItem("sb_session", JSON.stringify(s));
 function clearSession() { localStorage.removeItem("sb_session"); }
 
 const SERVICES = [
-  { id: "haircut", name: "תספורת רגילה", duration: 30, price: 60 },
-  { id: "beard", name: "עיצוב זקן", duration: 20, price: 40 },
-  { id: "haircut_beard", name: "תספורת + זקן", duration: 50, price: 90 },
-  { id: "fade", name: "פייד", duration: 40, price: 70 },
-  { id: "kids", name: "תספורת ילדים", duration: 25, price: 45 },
+  { id: "haircut", name: "תספורת רגילה", duration: 30, price: 60, emoji: "💈", desc: "תספורת קלאסית מקצועית" },
+  { id: "beard", name: "עיצוב זקן", duration: 20, price: 40, emoji: "🧔", desc: "עיצוב וסידור זקן" },
+  { id: "haircut_beard", name: "תספורת + זקן", duration: 50, price: 90, emoji: "✂️", desc: "חבילה מלאה במחיר מיוחד" },
+  { id: "fade", name: "פייד", duration: 40, price: 70, emoji: "⚡", desc: "גרדיאנט מקצועי" },
+  { id: "kids", name: "תספורת ילדים", duration: 25, price: 45, emoji: "🧒", desc: "עד גיל 12, בסבלנות ובאהבה" },
 ];
 
 function generateTimeSlots(date) {
@@ -293,7 +293,9 @@ function Home({ setView, barbershop, user, profile, signOut, isOwner, myAppointm
         <div style={s.serviceGrid}>
           {SERVICES.map(sv => (
             <div key={sv.id} style={s.serviceCard}>
+              <div style={s.serviceCardEmoji}>{sv.emoji}</div>
               <div style={s.serviceCardTitle}>{sv.name}</div>
+              <div style={{ color: "#9ca3af", fontSize: 11, marginBottom: 8 }}>{sv.desc}</div>
               <div style={s.serviceCardMeta}>
                 <span>⏱ {sv.duration} דק׳</span>
                 <span style={s.price}>₪{sv.price}</span>
@@ -534,11 +536,15 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
             {SERVICES.map(sv => (
               <div key={sv.id} style={{ ...s.optionRow, borderColor: form.service === sv.id ? "#4f46e5" : "#e5e7eb", background: form.service === sv.id ? "#eef2ff" : "#fff" }}
                 onClick={() => set("service", sv.id)}>
-                <div>
-                  <div style={{ color: "#111827", fontWeight: 600 }}>{sv.name}</div>
-                  <div style={{ color: "#9ca3af", fontSize: 13 }}>{sv.duration} דקות</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ fontSize: 32, lineHeight: 1 }}>{sv.emoji}</div>
+                  <div>
+                    <div style={{ color: "#111827", fontWeight: 600 }}>{sv.name}</div>
+                    <div style={{ color: "#9ca3af", fontSize: 12 }}>{sv.desc}</div>
+                    <div style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>⏱ {sv.duration} דקות</div>
+                  </div>
                 </div>
-                <div style={{ color: "#4f46e5", fontWeight: 700 }}>₪{sv.price}</div>
+                <div style={{ color: "#4f46e5", fontWeight: 700, fontSize: 16 }}>₪{sv.price}</div>
               </div>
             ))}
           </div>
@@ -549,9 +555,14 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
       {step === 2 && (
         <div style={s.card}>
           <h3 style={s.cardTitle}>תאריך ושעה</h3>
-          <label style={s.label}>תאריך</label>
+          <label style={s.label}>📅 בחר תאריך</label>
           <input style={s.input} type="date" min={minDate} value={form.date}
             onChange={e => { set("date", e.target.value); set("time", ""); }} />
+          {form.date && !isClosed && !isBlocked && (
+            <div style={{ background: "#eef2ff", borderRadius: 8, padding: "8px 12px", marginBottom: 4, fontSize: 13, color: "#4f46e5", fontWeight: 600 }}>
+              📅 {formatDate(form.date)}
+            </div>
+          )}
           {isClosed && <div style={s.closedBox}>🚫 המספרה סגורה בשבת</div>}
           {isBlocked && <div style={s.closedBox}>🏖️ המספרה סגורה ביום זה</div>}
           {form.date && !isClosed && !isBlocked && (
@@ -787,4 +798,5 @@ const s = {
   apptName: { color: "#111827", fontWeight: 600, fontSize: 14, marginTop: 2 },
   apptMeta: { color: "#9ca3af", fontSize: 12, marginTop: 3 },
   cancelBtn: { background: "transparent", border: "1px solid #fecaca", color: "#ef4444", borderRadius: 7, padding: "7px 14px", fontSize: 12, cursor: "pointer" },
+  serviceCardEmoji: { fontSize: 28, marginBottom: 8, display: "block" },
 };
