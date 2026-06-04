@@ -340,12 +340,12 @@ function Home({ setView, barbershop, user, profile, signOut, isOwner, myAppointm
         <div style={s.serviceGrid}>
           {SERVICES.map(sv => (
             <div key={sv.id} style={s.serviceCard}>
-              <div style={{ fontSize: 40, marginBottom: 10 }}>{sv.emoji}</div>
-              <div style={{ fontWeight: 800, fontSize: 16, color: "#111827", marginBottom: 4 }}>{sv.name}</div>
-              <div style={{ color: "#9ca3af", fontSize: 12, marginBottom: 12 }}>{sv.desc}</div>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>{sv.emoji}</div>
+              <div style={{ fontWeight: 800, fontSize: 16, color: "#f0e8d8", marginBottom: 6 }}>{sv.name}</div>
+              <div style={{ color: "#8b7355", fontSize: 12, marginBottom: 12 }}>{sv.desc}</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ color: "#6b7280", fontSize: 13 }}>⏱ {sv.duration} דק׳</span>
-                <span style={{ color: "#c8a97e", fontWeight: 900, fontSize: 22 }}>₪{sv.price}</span>
+                <span style={{ color: "#c8a97e", fontWeight: 900, fontSize: 20 }}>₪{sv.price}</span>
               </div>
             </div>
           ))}
