@@ -297,7 +297,7 @@ function Home({ setView, barbershop, user, profile, signOut, isOwner, myAppointm
           </div>
         )}
         {user && profile && (
-          <p style={{ color: "#6b7280", marginTop: 12, fontSize: 24 }}>שלום, {profile.first_name} 👋</p>
+          <p style={{ color: "#c8a97e", marginTop: 12, fontSize: 28, fontWeight: 800 }}>שלום, {profile.first_name} 👋</p>
         )}
       </div>
 
