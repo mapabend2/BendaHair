@@ -623,10 +623,17 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
         <div style={s.card}>
           <h3 style={s.cardTitle}>תאריך ושעה</h3>
           <label style={s.label}>📅 בחר תאריך</label>
-          <input style={s.input} type="date" min={minDate} value={form.date}
-            onChange={e => { set("date", e.target.value); set("time", ""); }} />
+          <div style={{ position: "relative", marginBottom: 16 }}>
+            <input style={{ ...s.input, marginBottom: 0, width: "100%", boxSizing: "border-box", colorScheme: "dark" }} type="date" min={minDate} value={form.date}
+              onChange={e => { set("date", e.target.value); set("time", ""); }} />
+            {!form.date && (
+              <div style={{ position: "absolute", top: "50%", right: 14, transform: "translateY(-50%)", color: "#6b5a4a", fontSize: 14, pointerEvents: "none" }}>
+                DD/MM/YYYY
+              </div>
+            )}
+          </div>
           {form.date && !isClosed && !isBlocked && (
-            <div style={{ background: "#eef2ff", borderRadius: 8, padding: "8px 12px", marginBottom: 4, fontSize: 13, color: "#4f46e5", fontWeight: 600 }}>
+            <div style={{ background: "#2a2015", borderRadius: 8, padding: "10px 14px", marginBottom: 8, fontSize: 15, color: "#c8a97e", fontWeight: 700 }}>
               📅 {formatDate(form.date)}
             </div>
           )}
@@ -704,9 +711,9 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
         {[["appointments","📅 תורים"],["customers","👥 לקוחות"],["ooo","🏖️ חופשות"]].map(([k,l]) => (
           <button key={k} onClick={() => { setTab(k); if (k === "customers") loadCustomers(); }} style={{
             flex: 1, background: "none", border: "none",
-            borderBottom: tab === k ? "2px solid #4f46e5" : "2px solid transparent",
+            borderBottom: tab === k ? "2px solid #c8a97e" : "2px solid transparent",
             marginBottom: -2,
-            color: tab === k ? "#4f46e5" : "#9ca3af",
+            color: tab === k ? "#c8a97e" : "#6b5a4a",
             padding: "12px 4px", fontSize: 13, fontWeight: 600, cursor: "pointer"
           }}>{l}</button>
         ))}
@@ -716,7 +723,7 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
         <>
           <div style={s.filterRow}>
             {[["upcoming","קרובים"],["past","עבר"],["all","הכל"]].map(([k,l]) => (
-              <button key={k} style={{ ...s.filterBtn, background: filter === k ? "#4f46e5" : "#f3f4f6", color: filter === k ? "#fff" : "#6b7280" }}
+              <button key={k} style={{ ...s.filterBtn, background: filter === k ? "#c8a97e" : "#2a2015", color: filter === k ? "#1a1512" : "#8b7355" }}
                 onClick={() => setFilter(k)}>{l}</button>
             ))}
             <button style={{ ...s.filterBtn, background: "#f3f4f6", color: "#6b7280" }} onClick={loadAppointments}>🔄</button>
@@ -825,7 +832,7 @@ const s = {
   btnOutline: { background: "transparent", color: "#c8a97e", border: "2px solid #c8a97e", borderRadius: 10, padding: "14px 26px", fontSize: 16, fontWeight: 700, cursor: "pointer" },
   btnGhost: { background: "transparent", color: "#6b5a4a", border: "1.5px solid #3a3028", borderRadius: 10, padding: "14px 20px", fontSize: 15, cursor: "pointer" },
   section: { padding: "28px 16px 0" },
-  sectionTitle: { color: "#c8a97e", fontSize: 20, fontWeight: 800, marginBottom: 16, margin: "0 0 16px", letterSpacing: 1 },
+  sectionTitle: { color: "#f0e8d8", fontSize: 22, fontWeight: 800, marginBottom: 16, margin: "0 0 16px", letterSpacing: 1 },
   serviceGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
   serviceCard: { background: "#1a1512", border: "2px solid #2a2015", borderRadius: 14, padding: "18px 16px", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" },
   serviceCardTitle: { fontWeight: 700, fontSize: 15, marginBottom: 6, color: "#f0e8d8" },
@@ -850,7 +857,7 @@ const s = {
   card: { margin: "20px 16px 0", background: "#1a1512", border: "2px solid #2a2015", borderRadius: 16, padding: "28px 20px" },
   cardTitle: { color: "#c8a97e", fontSize: 19, fontWeight: 800, marginTop: 0, marginBottom: 20 },
   label: { display: "block", color: "#8b7355", fontSize: 15, fontWeight: 600, marginBottom: 8 },
-  input: { width: "100%", background: "#0f0c0a", border: "2px solid #2a2015", borderRadius: 10, color: "#f0e8d8", padding: "14px 14px", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 16, direction: "rtl" },
+  input: { width: "100%", background: "#0f0c0a", border: "2px solid #2a2015", borderRadius: 10, color: "#f0e8d8", padding: "14px 14px", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 16, direction: "ltr", textAlign: "right" },
   error: { color: "#e05a5a", fontSize: 13, margin: "0 0 12px", fontWeight: 600 },
   optionRow: { display: "flex", justifyContent: "space-between", alignItems: "center", border: "2px solid", borderRadius: 14, padding: "16px 16px", cursor: "pointer", transition: "all .15s", marginBottom: 2 },
   timeGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 },
