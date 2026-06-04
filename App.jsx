@@ -832,7 +832,7 @@ const s = {
   btnOutline: { background: "transparent", color: "#c8a97e", border: "2px solid #c8a97e", borderRadius: 10, padding: "14px 26px", fontSize: 16, fontWeight: 700, cursor: "pointer" },
   btnGhost: { background: "transparent", color: "#6b5a4a", border: "1.5px solid #3a3028", borderRadius: 10, padding: "14px 20px", fontSize: 15, cursor: "pointer" },
   section: { padding: "28px 16px 0" },
-  sectionTitle: { color: "#c8a97e", fontSize: 24, fontWeight: 900, marginBottom: 16, margin: "0 0 16px", letterSpacing: 1 },
+  sectionTitle: { color: "#c8a97e", fontSize: 32, fontWeight: 900, marginBottom: 16, margin: "0 0 16px", letterSpacing: 1 },
   serviceGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
   serviceCard: { background: "#1a1512", border: "2px solid #2a2015", borderRadius: 14, padding: "18px 16px", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" },
   serviceCardTitle: { fontWeight: 700, fontSize: 15, marginBottom: 6, color: "#f0e8d8" },
