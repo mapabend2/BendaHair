@@ -3,18 +3,65 @@ import { useState, useEffect } from "react";
 const SUPABASE_URL = "https://oiusfwcdqyyfxzpdoqkm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_WpwBaxSGrPOa8dXDab5Vug_vfZpDQNR";
 
-async function sbFetch(path, options = {}) {
+async function refreshSession() {
   const session = getSession();
+  if (!session?.refresh_token) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: session.refresh_token }),
+    });
+    if (!res.ok) { clearSession(); return null; }
+    const data = await res.json();
+    saveSession(data);
+    return data;
+  } catch { clearSession(); return null; }
+}
+
+async function sbFetch(path, options = {}) {
+  let session = getSession();
+  
+  // Try to refresh if token might be expired
+  if (session?.expires_at) {
+    const expiresAt = new Date(session.expires_at * 1000);
+    if (expiresAt < new Date()) {
+      session = await refreshSession();
+    }
+  }
+
+  const token = session?.access_token || SUPABASE_KEY;
   const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     headers: {
       "apikey": SUPABASE_KEY,
-      "Authorization": `Bearer ${session?.access_token || SUPABASE_KEY}`,
+      "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json",
       "Prefer": options.prefer || "return=representation",
       ...options.headers,
     },
     ...options,
   });
+  
+  // If still 401, try refresh once more
+  if (res.status === 401) {
+    const newSession = await refreshSession();
+    if (newSession) {
+      const retry = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${newSession.access_token}`,
+          "Content-Type": "application/json",
+          "Prefer": options.prefer || "return=representation",
+          ...options.headers,
+        },
+        ...options,
+      });
+      if (!retry.ok) { const e = await retry.json(); throw new Error(e.message || "Error"); }
+      const text = await retry.text();
+      return text ? JSON.parse(text) : [];
+    }
+  }
+  
   if (!res.ok) { const e = await res.json(); throw new Error(e.message || "Error"); }
   const text = await res.text();
   return text ? JSON.parse(text) : [];
@@ -768,55 +815,55 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
 
 // ─── Styles ──────────────────────────────────────────────────────
 const s = {
-  page: { minHeight: "100vh", background: "#f3f4f6", color: "#111827", fontFamily: "'Segoe UI', Tahoma, sans-serif", direction: "rtl", padding: "0 0 48px" },
-  hero: { textAlign: "center", padding: "52px 24px 44px", background: "#fff", borderBottom: "2px solid #e5e7eb", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" },
-  scissors: { fontSize: 56, display: "block", marginBottom: 12 },
-  heroTitle: { fontSize: 44, fontWeight: 900, color: "#111827", margin: "0 0 8px", letterSpacing: 1 },
-  heroSub: { color: "#6b7280", fontSize: 18, margin: "0 0 32px" },
+  page: { minHeight: "100vh", background: "#0f0c0a", color: "#f0e8d8", fontFamily: "'Segoe UI', Tahoma, sans-serif", direction: "rtl", padding: "0 0 48px" },
+  hero: { textAlign: "center", padding: "52px 24px 44px", background: "linear-gradient(180deg, #1a1208 0%, #0f0c0a 100%)", borderBottom: "1px solid #2a2015" },
+  scissors: { fontSize: 56, display: "block", marginBottom: 12, filter: "drop-shadow(0 0 16px #c8a97e88)" },
+  heroTitle: { fontSize: 44, fontWeight: 900, color: "#c8a97e", margin: "0 0 8px", letterSpacing: 2, textTransform: "uppercase" },
+  heroSub: { color: "#8b7355", fontSize: 18, margin: "0 0 32px" },
   heroButtons: { display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" },
-  btnPrimary: { background: "#4f46e5", color: "#fff", border: "none", borderRadius: 10, padding: "16px 32px", fontSize: 17, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 12px rgba(79,70,229,0.35)" },
-  btnOutline: { background: "#fff", color: "#4f46e5", border: "2.5px solid #4f46e5", borderRadius: 10, padding: "14px 26px", fontSize: 16, fontWeight: 700, cursor: "pointer" },
-  btnGhost: { background: "transparent", color: "#9ca3af", border: "1.5px solid #e5e7eb", borderRadius: 10, padding: "14px 20px", fontSize: 15, cursor: "pointer" },
+  btnPrimary: { background: "#c8a97e", color: "#1a1512", border: "none", borderRadius: 10, padding: "16px 32px", fontSize: 17, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 12px rgba(200,169,126,0.35)" },
+  btnOutline: { background: "transparent", color: "#c8a97e", border: "2px solid #c8a97e", borderRadius: 10, padding: "14px 26px", fontSize: 16, fontWeight: 700, cursor: "pointer" },
+  btnGhost: { background: "transparent", color: "#6b5a4a", border: "1.5px solid #3a3028", borderRadius: 10, padding: "14px 20px", fontSize: 15, cursor: "pointer" },
   section: { padding: "28px 16px 0" },
-  sectionTitle: { color: "#111827", fontSize: 20, fontWeight: 800, marginBottom: 16, margin: "0 0 16px" },
+  sectionTitle: { color: "#c8a97e", fontSize: 20, fontWeight: 800, marginBottom: 16, margin: "0 0 16px", letterSpacing: 1 },
   serviceGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
-  serviceCard: { background: "#fff", border: "2px solid #e5e7eb", borderRadius: 14, padding: "18px 16px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
-  serviceCardTitle: { fontWeight: 700, fontSize: 15, marginBottom: 6, color: "#111827" },
-  serviceCardMeta: { display: "flex", justifyContent: "space-between", color: "#9ca3af", fontSize: 13, marginTop: 8 },
-  price: { color: "#4f46e5", fontWeight: 800, fontSize: 16 },
-  hoursBox: { background: "#fff", border: "2px solid #e5e7eb", borderRadius: 14, padding: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
-  hoursTitle: { color: "#111827", fontSize: 16, margin: "0 0 14px", fontWeight: 800 },
-  hoursRow: { display: "flex", justifyContent: "space-between", color: "#374151", fontSize: 16, fontWeight: 500, marginBottom: 10 },
-  myApptCard: { background: "#fff", border: "2px solid #e5e7eb", borderRadius: 14, padding: "18px 16px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
-  myApptDate: { color: "#6b7280", fontSize: 13, marginBottom: 10, fontWeight: 600 },
+  serviceCard: { background: "#1a1512", border: "2px solid #2a2015", borderRadius: 14, padding: "18px 16px", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" },
+  serviceCardTitle: { fontWeight: 700, fontSize: 15, marginBottom: 6, color: "#f0e8d8" },
+  serviceCardMeta: { display: "flex", justifyContent: "space-between", color: "#6b5a4a", fontSize: 13, marginTop: 8 },
+  price: { color: "#c8a97e", fontWeight: 800, fontSize: 18 },
+  hoursBox: { background: "#1a1512", border: "2px solid #2a2015", borderRadius: 14, padding: 20 },
+  hoursTitle: { color: "#c8a97e", fontSize: 16, margin: "0 0 14px", fontWeight: 800 },
+  hoursRow: { display: "flex", justifyContent: "space-between", color: "#8b7355", fontSize: 16, fontWeight: 500, marginBottom: 10 },
+  myApptCard: { background: "#1a1512", border: "2px solid #2a2015", borderRadius: 14, padding: "18px 16px" },
+  myApptDate: { color: "#8b7355", fontSize: 13, marginBottom: 10, fontWeight: 600 },
   myApptRow: { display: "flex", justifyContent: "space-between", alignItems: "center" },
-  myApptTime: { color: "#4f46e5", fontWeight: 800, fontSize: 22 },
-  myApptService: { color: "#374151", fontSize: 15, marginTop: 4 },
-  myApptPrice: { color: "#111827", fontWeight: 800, fontSize: 20, textAlign: "left" },
-  cancelSmallBtn: { background: "none", border: "none", color: "#ef4444", fontSize: 13, cursor: "pointer", padding: "4px 0", textAlign: "left", fontWeight: 600 },
-  emptyBox: { background: "#fff", border: "2px solid #e5e7eb", borderRadius: 14, padding: "32px 16px", textAlign: "center" },
-  topBar: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px", background: "#fff", borderBottom: "2px solid #e5e7eb" },
-  topBarTitle: { color: "#111827", fontSize: 20, margin: 0, fontWeight: 800 },
-  back: { background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: 16, padding: 0, fontWeight: 600 },
+  myApptTime: { color: "#c8a97e", fontWeight: 800, fontSize: 22 },
+  myApptService: { color: "#f0e8d8", fontSize: 15, marginTop: 4 },
+  myApptPrice: { color: "#c8a97e", fontWeight: 800, fontSize: 20, textAlign: "left" },
+  cancelSmallBtn: { background: "none", border: "none", color: "#e05a5a", fontSize: 13, cursor: "pointer", padding: "4px 0", textAlign: "left", fontWeight: 600 },
+  emptyBox: { background: "#1a1512", border: "2px solid #2a2015", borderRadius: 14, padding: "32px 16px", textAlign: "center" },
+  topBar: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px", background: "#1a1512", borderBottom: "1px solid #2a2015" },
+  topBarTitle: { color: "#c8a97e", fontSize: 20, margin: 0, fontWeight: 800 },
+  back: { background: "none", border: "none", color: "#8b7355", cursor: "pointer", fontSize: 16, padding: 0, fontWeight: 600 },
   steps: { display: "flex", gap: 8 },
   stepDot: { width: 10, height: 10, borderRadius: "50%", transition: "background .3s" },
-  card: { margin: "20px 16px 0", background: "#fff", border: "2px solid #e5e7eb", borderRadius: 16, padding: "28px 20px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
-  cardTitle: { color: "#111827", fontSize: 19, fontWeight: 800, marginTop: 0, marginBottom: 20 },
-  label: { display: "block", color: "#374151", fontSize: 15, fontWeight: 600, marginBottom: 8 },
-  input: { width: "100%", background: "#f9fafb", border: "2px solid #e5e7eb", borderRadius: 10, color: "#111827", padding: "14px 14px", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 16, direction: "rtl" },
-  error: { color: "#ef4444", fontSize: 13, margin: "0 0 12px", fontWeight: 600 },
+  card: { margin: "20px 16px 0", background: "#1a1512", border: "2px solid #2a2015", borderRadius: 16, padding: "28px 20px" },
+  cardTitle: { color: "#c8a97e", fontSize: 19, fontWeight: 800, marginTop: 0, marginBottom: 20 },
+  label: { display: "block", color: "#8b7355", fontSize: 15, fontWeight: 600, marginBottom: 8 },
+  input: { width: "100%", background: "#0f0c0a", border: "2px solid #2a2015", borderRadius: 10, color: "#f0e8d8", padding: "14px 14px", fontSize: 16, outline: "none", boxSizing: "border-box", marginBottom: 16, direction: "rtl" },
+  error: { color: "#e05a5a", fontSize: 13, margin: "0 0 12px", fontWeight: 600 },
   optionRow: { display: "flex", justifyContent: "space-between", alignItems: "center", border: "2px solid", borderRadius: 14, padding: "16px 16px", cursor: "pointer", transition: "all .15s", marginBottom: 2 },
   timeGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 },
   timeSlot: { borderRadius: 10, padding: "13px 4px", textAlign: "center", fontSize: 15, fontWeight: 700, transition: "all .15s", border: "2px solid" },
-  closedBox: { background: "#fef2f2", border: "2px solid #fecaca", borderRadius: 10, padding: "16px", color: "#ef4444", textAlign: "center", marginTop: 14, fontSize: 15, fontWeight: 600 },
-  successIcon: { width: 68, height: 68, background: "#4f46e5", color: "#fff", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 800, margin: "0 auto 24px" },
+  closedBox: { background: "#2a1515", border: "2px solid #5a2020", borderRadius: 10, padding: "16px", color: "#e05a5a", textAlign: "center", marginTop: 14, fontSize: 15, fontWeight: 600 },
+  successIcon: { width: 68, height: 68, background: "#c8a97e", color: "#1a1512", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, fontWeight: 800, margin: "0 auto 24px" },
   filterRow: { display: "flex", gap: 8, padding: "16px 16px 0" },
   filterBtn: { flex: 1, border: "none", borderRadius: 10, padding: "12px 0", fontSize: 14, fontWeight: 700, cursor: "pointer" },
-  dateLabel: { color: "#6b7280", fontSize: 13, fontWeight: 700, letterSpacing: 0.5, marginBottom: 10, textTransform: "uppercase" },
-  apptCard: { display: "flex", alignItems: "center", background: "#fff", border: "2px solid #e5e7eb", borderRadius: 14, padding: "16px 16px", marginBottom: 10, boxShadow: "0 2px 6px rgba(0,0,0,0.05)" },
-  apptTime: { color: "#4f46e5", fontWeight: 800, fontSize: 20 },
-  apptName: { color: "#111827", fontWeight: 700, fontSize: 16, marginTop: 3 },
-  apptMeta: { color: "#9ca3af", fontSize: 13, marginTop: 4 },
-  cancelBtn: { background: "transparent", border: "2px solid #fecaca", color: "#ef4444", borderRadius: 8, padding: "9px 16px", fontSize: 13, cursor: "pointer", fontWeight: 700 },
+  dateLabel: { color: "#8b7355", fontSize: 13, fontWeight: 700, letterSpacing: 0.5, marginBottom: 10, textTransform: "uppercase" },
+  apptCard: { display: "flex", alignItems: "center", background: "#1a1512", border: "2px solid #2a2015", borderRadius: 14, padding: "16px 16px", marginBottom: 10 },
+  apptTime: { color: "#c8a97e", fontWeight: 800, fontSize: 20 },
+  apptName: { color: "#f0e8d8", fontWeight: 700, fontSize: 16, marginTop: 3 },
+  apptMeta: { color: "#6b5a4a", fontSize: 13, marginTop: 4 },
+  cancelBtn: { background: "transparent", border: "2px solid #5a2020", color: "#e05a5a", borderRadius: 8, padding: "9px 16px", fontSize: 13, cursor: "pointer", fontWeight: 700 },
   serviceCardEmoji: { fontSize: 36, marginBottom: 10, display: "block" },
 };
