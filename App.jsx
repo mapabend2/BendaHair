@@ -345,7 +345,7 @@ function Home({ setView, barbershop, user, profile, signOut, isOwner, myAppointm
               <div style={{ color: "#9ca3af", fontSize: 12, marginBottom: 12 }}>{sv.desc}</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ color: "#6b7280", fontSize: 13 }}>⏱ {sv.duration} דק׳</span>
-                <span style={{ color: "#4f46e5", fontWeight: 900, fontSize: 20 }}>₪{sv.price}</span>
+                <span style={{ color: "#c8a97e", fontWeight: 900, fontSize: 22 }}>₪{sv.price}</span>
               </div>
             </div>
           ))}
@@ -431,7 +431,7 @@ function SignUp({ setView, signUp }) {
         </button>
         <p style={{ textAlign: "center", color: "#9ca3af", fontSize: 13, marginTop: 16 }}>
           כבר יש לך חשבון?{" "}
-          <span style={{ color: "#4f46e5", cursor: "pointer", fontWeight: 600 }} onClick={() => setView("signin")}>התחבר</span>
+          <span style={{ color: "#c8a97e", cursor: "pointer", fontWeight: 600 }} onClick={() => setView("signin")}>התחבר</span>
         </p>
       </div>
     </div>
@@ -488,13 +488,13 @@ function SignIn({ setView, signIn, resetPassword }) {
               {loading ? "מתחבר..." : "כניסה"}
             </button>
             <p style={{ textAlign: "center", marginTop: 14 }}>
-              <span style={{ color: "#4f46e5", cursor: "pointer", fontSize: 13 }} onClick={() => setResetMode(true)}>
+              <span style={{ color: "#c8a97e", cursor: "pointer", fontSize: 13 }} onClick={() => setResetMode(true)}>
                 שכחתי סיסמה
               </span>
             </p>
             <p style={{ textAlign: "center", color: "#9ca3af", fontSize: 13, marginTop: 8 }}>
               אין לך חשבון?{" "}
-              <span style={{ color: "#4f46e5", cursor: "pointer", fontWeight: 600 }} onClick={() => setView("signup")}>הרשמה</span>
+              <span style={{ color: "#c8a97e", cursor: "pointer", fontWeight: 600 }} onClick={() => setView("signup")}>הרשמה</span>
             </p>
           </>
         ) : resetSent ? (
@@ -584,8 +584,8 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
               <div key={sv.id}
                 onClick={() => set("service", sv.id)}
                 style={{
-                  background: form.service === sv.id ? "#eef2ff" : "#fff",
-                  border: `2px solid ${form.service === sv.id ? "#4f46e5" : "#f0f0f0"}`,
+                  background: form.service === sv.id ? "#2a2015" : "#1a1512",
+                  border: `2px solid ${form.service === sv.id ? "#c8a97e" : "#2a2015"}`,
                   borderRadius: 16,
                   padding: "18px 20px",
                   marginBottom: 12,
@@ -593,7 +593,7 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  boxShadow: form.service === sv.id ? "0 4px 16px rgba(79,70,229,0.15)" : "0 2px 8px rgba(0,0,0,0.06)",
+                  boxShadow: form.service === sv.id ? "0 4px 16px rgba(200,169,126,0.2)" : "0 2px 8px rgba(0,0,0,0.3)",
                   transition: "all .2s",
                 }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
@@ -605,7 +605,7 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: form.service === sv.id ? "#4f46e5" : "#111827" }}>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: form.service === sv.id ? "#c8a97e" : "#f0e8d8" }}>
                     ₪{sv.price}
                   </div>
                   {form.service === sv.id && (
@@ -832,7 +832,7 @@ const s = {
   btnOutline: { background: "transparent", color: "#c8a97e", border: "2px solid #c8a97e", borderRadius: 10, padding: "14px 26px", fontSize: 16, fontWeight: 700, cursor: "pointer" },
   btnGhost: { background: "transparent", color: "#6b5a4a", border: "1.5px solid #3a3028", borderRadius: 10, padding: "14px 20px", fontSize: 15, cursor: "pointer" },
   section: { padding: "28px 16px 0" },
-  sectionTitle: { color: "#f0e8d8", fontSize: 22, fontWeight: 800, marginBottom: 16, margin: "0 0 16px", letterSpacing: 1 },
+  sectionTitle: { color: "#c8a97e", fontSize: 24, fontWeight: 900, marginBottom: 16, margin: "0 0 16px", letterSpacing: 1 },
   serviceGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
   serviceCard: { background: "#1a1512", border: "2px solid #2a2015", borderRadius: 14, padding: "18px 16px", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" },
   serviceCardTitle: { fontWeight: 700, fontSize: 15, marginBottom: 6, color: "#f0e8d8" },
@@ -846,7 +846,7 @@ const s = {
   myApptRow: { display: "flex", justifyContent: "space-between", alignItems: "center" },
   myApptTime: { color: "#c8a97e", fontWeight: 800, fontSize: 22 },
   myApptService: { color: "#f0e8d8", fontSize: 15, marginTop: 4 },
-  myApptPrice: { color: "#c8a97e", fontWeight: 800, fontSize: 20, textAlign: "left" },
+  myApptPrice: { color: "#c8a97e", fontWeight: 900, fontSize: 22, textAlign: "left" },
   cancelSmallBtn: { background: "none", border: "none", color: "#e05a5a", fontSize: 13, cursor: "pointer", padding: "4px 0", textAlign: "left", fontWeight: 600 },
   emptyBox: { background: "#1a1512", border: "2px solid #2a2015", borderRadius: 14, padding: "32px 16px", textAlign: "center" },
   topBar: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px", background: "#1a1512", borderBottom: "1px solid #2a2015" },
