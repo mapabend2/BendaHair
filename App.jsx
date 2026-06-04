@@ -598,7 +598,7 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
                 }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
                   <div style={{ fontSize: 28, marginBottom: 6 }}>{sv.emoji}</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: "#111827" }}>{sv.name}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "#f0e8d8" }}>{sv.name}</div>
                   <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>{sv.desc}</div>
                   <div style={{ fontSize: 13, color: "#6b7280", marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
                     <span>⏱</span> <span>{sv.duration} דקות</span>
