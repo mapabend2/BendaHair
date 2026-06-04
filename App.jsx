@@ -573,7 +573,7 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
       <div style={s.topBar}>
         <button style={s.back} onClick={() => step > 1 ? setStep(st => st - 1) : setView("home")}>← חזור</button>
         <h2 style={s.topBarTitle}>קביעת תור</h2>
-        <div style={s.steps}>{[1,2].map(n => <div key={n} style={{ ...s.stepDot, background: step >= n ? "#4f46e5" : "#e5e7eb" }} />)}</div>
+        <div style={s.steps}>{[1,2].map(n => <div key={n} style={{ ...s.stepDot, background: step >= n ? "#c8a97e" : "#3a3028" }} />)}</div>
       </div>
 
       {step === 1 && (
@@ -609,7 +609,7 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
                     ₪{sv.price}
                   </div>
                   {form.service === sv.id && (
-                    <div style={{ width: 28, height: 28, background: "#4f46e5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15, fontWeight: 800 }}>✓</div>
+                    <div style={{ width: 28, height: 28, background: "#c8a97e", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#1a1512", fontSize: 15, fontWeight: 800 }}>✓</div>
                   )}
                 </div>
               </div>
@@ -650,10 +650,10 @@ function BookView({ setView, addAppointment, isSlotTaken, isDateBlocked, barbers
                   return (
                     <div key={t} style={{
                       ...s.timeSlot,
-                      background: unavail ? "#f3f4f6" : form.time === t ? "#4f46e5" : "#fff",
-                      color: unavail ? "#d1d5db" : form.time === t ? "#fff" : "#374151",
+                      background: unavail ? "#0f0c0a" : form.time === t ? "#c8a97e" : "#1a1512",
+                      color: unavail ? "#3a3028" : form.time === t ? "#1a1512" : "#f0e8d8",
                       cursor: unavail ? "not-allowed" : "pointer",
-                      border: `1px solid ${unavail ? "#e5e7eb" : form.time === t ? "#4f46e5" : "#d1d5db"}`,
+                      border: `2px solid ${unavail ? "#1a1512" : form.time === t ? "#c8a97e" : "#2a2015"}`,
                       textDecoration: past && !taken ? "line-through" : "none",
                     }} onClick={() => !unavail && set("time", t)}>{t}</div>
                   );
@@ -704,7 +704,7 @@ function AdminView({ appointments, cancelAppointment, setView, barbershop, loadA
       <div style={s.topBar}>
         <button style={s.back} onClick={() => setView("home")}>← יציאה</button>
         <h2 style={s.topBarTitle}>ניהול</h2>
-        <div style={{ color: "#4f46e5", fontSize: 14, fontWeight: 600 }}>{appointments.length} תורים</div>
+        <div style={{ color: "#c8a97e", fontSize: 14, fontWeight: 600 }}>{appointments.length} תורים</div>
       </div>
 
       <div style={{ display: "flex", borderBottom: "2px solid #e5e7eb", margin: "0 20px" }}>
